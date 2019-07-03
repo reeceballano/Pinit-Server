@@ -2,7 +2,7 @@
 
 Pinit is simple management tool.
 
-Technology (Server):
+Technology (Server/Backend):
 - NodeJS
 - ExpressJS
 - MongoDB(soon)
