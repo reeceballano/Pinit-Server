@@ -1,6 +1,17 @@
 const express = require('express');
 const app = express();
 const todos = require('./routes/todos');
+const mongoose = require('mongoose');
+const config    = require('config');
+
+if(app.get('env') === 'development') {
+    console.log('Development mode');
+
+} else {
+    console.log('Production mode');
+}
+
+mongoose.connect(`mongodb+srv://admin:${process.env.mongoodb_password}@todos-xsc5p.mongodb.net/test?retryWrites=true&w=majority`, { userNewUrlParser: true });
 
 app.use(express.json());
 

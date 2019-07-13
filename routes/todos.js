@@ -1,5 +1,8 @@
 const express = require('express');
 const route = express.Router();
+const mongoose = require('mongoose');
+
+const Todo = require('../models/todo');
 
 const todos = [
 	{ id: 1, name: "Task 1", status: 0 },
@@ -9,37 +12,48 @@ const todos = [
 
 // GET TODOS
 route.get('/todos', (req, res) => {
-	res.send(todos);
+	Todo.find()
+		.exec()
+		.then(doc => {
+			res.status(200).send(doc);
+		})
+		.catch(err => {
+			res.status(500).send(err);
+		});
 });
 
 // GET SINGLE TODO
 route.get('/todos/:id', (req, res) => {
-	// FIND ID
-	const todo = todos.find(todo => todo.id === parseInt(req.params.id));
 
-	if(!todo) {
-		return res.status(404).send('Could\'nt find the given ID');
-	}
+	const id = req.params.id;
 
-	res.send(todo);
+	Todo.findById(id)
+		.exec()
+		.then(doc => {
+			if(doc) {
+				res.status(200).send(doc);
+			} else {
+				res.status(404).send('Couldnt find the given ID');
+			}
+		})
+		.catch(err => {
+			res.status(500).send(err.message);
+		});
 });
 
 // UPDATE TODO
 route.put('/todos/:id', (req, res) => {
-	// FIND ID
-	const todo = todos.find(todo => todo.id === parseInt(req.params.id));
+	const id = req.params.id;
 	const name = req.body.name;
 
-	if(!todo) {
-		return res.status(404).send('Could\'nt find the given ID');
-	}
-
-	if(name.length < 3) {
-		return res.status(400).send('Please provide a valid name');
-	}
-
-	todo.name = name;
-	res.send(todo);
+	Todo.updateOne({ _id: id }, { name: name })
+		.exec()
+		.then( result => {
+			res.status(200).send(result);
+		})
+		.catch(err => {
+			res.status(500).send(err);
+		});
 });
 
 // ADD TODO
@@ -50,29 +64,34 @@ route.post('/todos', (req, res) => {
 		return res.status(400).send('Please provide a valid name');
 	}
 
-	const todo = {
-		id: todos.length + 1,
+	const todo = new Todo({
+		_id: new mongoose.Types.ObjectId(),
 		name: name,
-		status: 0
-	};
+		status: req.body.status
+	});
 
-	todos.push(todo);
-	res.send(todos);
+	todo
+		.save()
+		.then(result => {
+			console.log(result);
+		})
+		.catch(err => console.log(err));
+	
+	res.status(200).send(todo);
 });
 
 // DELETE TODO
 route.delete('/todos/:id', (req, res) => {
-	// FIND ID
-	const todo = todos.find(todo => todo.id === parseInt(req.params.id));
+	const id = req.params.id;
 
-	if(!todo) {
-		return res.send('Could\'nt find the given ID');
-	}
-
-	const index = todos.indexOf(todo);
-	todos.splice(index, 1);
-
-	res.send('Deleted Successfully').send(todos);
+	Todo.remove({_id: id})
+		.exec()
+		.then(results => {
+			res.status(200).send('Task deleted successfully');
+		})
+		.catch(err => {
+			res.status(500).send(err);
+		});
 });
 
 
